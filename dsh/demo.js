@@ -1,5 +1,5 @@
 /**
- * 合成演示档案（is_demo=1）。M0 骨架只播种档案层；业务演示数据（感染/置换/化验）
+ * 合成演示档案（is_demo=1）。M0 骨架只播种档案层；业务演示数据（感染/替代治疗/化验）
  * 随 M2 的 DEMO_DATA 唯一源一起定稿并标注「合成示例」。
  *
  * 为什么 is_demo 必须是列：用户新建的档案（is_demo=0）与演示档案必须能并存、能区分、
@@ -18,7 +18,7 @@ const DEMO_PROFILES = [
     profile_key: 'demo-b-suisheng',
     name: '示例档案 B · 维持期多年',
     meta: JSON.stringify({ perspective: '本人', note: '合成示例，未连接真实病历' }),
-    headline: 'IVIG 维持期：按 4 周节律置换中（合成示例）',
+    headline: 'IVIG 维持期：按 4 周节律替代治疗中（合成示例）',
     dash_keys: JSON.stringify(['igg', 'infusion_gap', 'infection_count']),
     created_on: '2026-11-01',
   },
