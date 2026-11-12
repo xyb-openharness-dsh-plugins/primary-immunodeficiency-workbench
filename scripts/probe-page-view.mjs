@@ -95,9 +95,9 @@ async function main() {
     // 打开第一层。用程序化 click：puppeteer 的 page.click 会先 scrollIntoViewIfNeeded，
     // 那会把主页滚回顶部，A5 就永远测不出真问题（2026-10-25 实测踩到）。
     const clickSel = sel => page.evaluate(s => document.querySelector(s)?.click(), sel)
-    await clickSel('[data-open="pathology"]')
+    await clickSel('[data-open="report"]')
     await page.waitForSelector('.pv-overlay:not([hidden])', { timeout: 3000 })
-    await page.waitForFunction(() => document.querySelector('.pv-title')?.textContent?.includes('病理报告'), { timeout: 3000 }).catch(() => {})
+    await page.waitForFunction(() => document.querySelector('.pv-title')?.textContent?.includes('报告详情'), { timeout: 3000 }).catch(() => {})
 
     // A1 宿主不滚，滚的是 .pv-body
     // 2026-10-25 改严两次，记下来免得以后再踩：
@@ -157,7 +157,7 @@ async function main() {
       open: !document.querySelector('.pv-overlay')?.hidden,
       title: document.querySelector('.pv-title')?.textContent?.trim()
     }))
-    check('A2', 'Esc 只退一层（三层 → 二层，浮层仍开）', afterEsc.open && afterEsc.title === '病理报告', JSON.stringify(afterEsc))
+    check('A2', 'Esc 只退一层（三层 → 二层，浮层仍开）', afterEsc.open && afterEsc.title === '报告详情', JSON.stringify(afterEsc))
 
     // A3 浏览器返回键等价 back()
     await page.goBack()
@@ -185,6 +185,12 @@ async function main() {
     const closePt = await center('.pv-head-actions button:last-child')
     await page.mouse.click(closePt.x, closePt.y)
     await page.waitForFunction(() => document.querySelector('.pv-overlay')?.hidden === true, { timeout: 3000 }).catch(() => {})
+    // 关闭走 history 导航，Chrome 会异步把焦点重置回 body，应用在 60–1000ms 内多轮补焦：
+    // 断言语义是「焦点最终回到触发元素」，所以轮询等待而不是在 t=0 抢跑（2026-11-13 自 cold-agglutinin 回流）。
+    await page.waitForFunction(
+      () => { const el = document.activeElement; return !!el && el.dataset?.open === 'chart' },
+      { timeout: 1500 }
+    ).catch(() => {})
     const a4b = await page.evaluate(() => {
       const el = document.activeElement
       return { tag: el?.tagName, isTrigger: el?.dataset?.open === 'chart' }

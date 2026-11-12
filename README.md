@@ -1,44 +1,72 @@
-# 小御宝 ImmuPal 原发性免疫缺陷病工作台
+# 小御宝 ImmuPal · 原发性免疫缺陷病（PID）工作台
 
-本机优先的原发性免疫缺陷病（PID）感染事件档案、IVIG 置换按次记录、免疫球蛋白水平可比组展示、预防性用药与接种口径登记、复诊准备工作台
+本机优先的 PID 患者工作台：感染事件档案、IVIG/SCIG 替代治疗按次记录、免疫球蛋白水平（可比组）展示、预防性用药与接种口径登记、复诊准备工作台。**只整理本机资料，不做诊断、不给处置建议、不做病情判定。**
 
-这是接入骨架，尚未实现真实业务。初始化后先将 [项目设计提示词](docs/DESIGN-PROMPT.md) 交给当前Agent；它应展示实际路径并以已有用户/场景/流程素材对齐设计者、研究与取舍原则。癌种项目另有 [完整专用提示词](prompts/NEW-CANCER-WORKBENCH.md)。需求见 [BRIEF](docs/BRIEF.md)，规格见 [SPEC](docs/SPEC.md)，任务见 [TASKS](docs/TASKS.md)；先读 [AGENTS](AGENTS.md)。CLI输出交接与首问，实际对话由Agent接续。
+> 状态：交互原型 v0.2.0（M2）· 全部数据为合成示例 · 未接入宿主 · 0 患者访谈 · 0 临床审核（阈值一律【待核】）
 
-## 开发顺序
+## 疾病概要
 
-先共创SPEC和候选数据关系，再交付HTML交互工作台；由用户确认对应版本/模块后，复核SCHEMA/API并实现生产功能。确认记录见docs/PROTOTYPE-REVIEW.md；模型不依赖前端Tab/流程。模板骨架不是业务已确认。
+原发性免疫缺陷病（PID）是一大类遗传性免疫缺陷（《86 个罕见病病种诊疗指南（2025 年版）》第 66 项，正文 p.385；第二批罕见病目录第 66 号）：免疫细胞或分子数量/功能异常，最常见表现为反复、严重、少见的感染。工作台视角的病程结构：**确诊评估期 → 替代治疗启动期 → 维持期（感染监测）**，家长代记为主（R3 双视角）。
 
-## 当前能力
+顶栏「？」或首页「疾病概要：原发性免疫缺陷病是什么？」可打开整页疾病概要（定义 → 医学资料规范和指南情况 → 治疗全景 → 发展趋势，每段强制来源行，四态标注原件/官方入口/二次来源/nolink）。
 
-- 一个 DSH 工作台注册、认证的健康接口、版本展示与标准/大字切换。
-- 已明确选择布局：business-first。business-first 使用 customFrame；模板不创建会话或复制聊天。需要 AI 协助时按官方合同接入原生 conversation 和会话管理。
-- 无业务数据库、无演示患者、无真实密钥；所有业务页按确认 spec 逐项实现。
+## 关键功能（截图墙）
 
-## 开发与本地验收
+**看板：状态卡 + 医生行动计划原话 + 最近报告**
 
-需要 Node.js 22+、Git、包管理器和可用 DSH Desktop；采用 SQLite 时另核验 node:sqlite 版本条件。宿主 peers 的范围仅是模板基线，请与目标 Desktop 实际依赖核对。
+![看板](docs/assets/v0.2.0-dashboard.png)
+
+状态卡数字（感染中第 N 天、距上次感染、距上次替代治疗、近 90 天/近 12 月感染次数）全部由你记录的事实算出，漏记会偏小，不代表医生判断。
+
+**感染与急症：一条一条记，缓解后补结束日期**
+
+![感染与急症](docs/assets/v0.2.0-infections.png)
+
+**一图秀：化验按「方法+机构」可比组展示，不同方法不合并**
+
+![一图秀](docs/assets/v0.2.0-one-chart.png)
+
+**指标卡：真 3D 翻转看走势，差值只在同方法同机构组内显示**
+
+![指标卡](docs/assets/v0.2.0-metric-cards.png)
+
+**疾病概要（整页四段，？按钮与首页文字按钮双入口）**
+
+![疾病概要](docs/assets/v0.2.0-disease-primer.png)
+
+**折叠分组收/展态（一图秀 rail）**
+
+![折叠收](docs/assets/v0.2.0-fold-closed.png)
+![折叠展](docs/assets/v0.2.0-fold-open.png)
+
+## 怎么用
+
+1. 独立预览：`cd prototypes/v0.2 && python3 -m http.server 8931`，浏览器打开 `http://127.0.0.1:8931/index.html`；
+2. 侧栏可切换两套合成档案（A 刚确诊记录少 / B 维持期多年记录多），切换后整页联动不串档；
+3. 每个可写页顶部有「＋ 添加」入口，表单 ≤6 字段、三态保存（保存并继续录入 / 保存并关闭 / 取消）；更正=新增版本，无裸删除；
+4. 每页「和 AI 讨论」只填草稿不自动发送；私密记录不进看板摘要、导出与 AI 上下文（三出口同一过滤，页内可见「N 条中私密 M 条」）；
+5. 装进 DSH Desktop 后（M6），资料目录必须选本机专用文件夹——主目录、桌面、下载根目录、tmp 一律拒绝。
+
+## 数据与口径
+
+- **仅回顾，不解读 · 不同方法/机构不合并 · 解读归医生**（与数字同屏）；
+- 化验（IgG/IgA/IgM 谷浓度、淋巴细胞亚群）按「方法+机构」可比组展示；跨组不合并不做差不连线；
+- 派生值（距上次感染天数、近 12 月感染次数、替代治疗参考间隔）读时计算，不落库、不判定；
+- 接种口径只录医生已确认原话；本台不回答「能不能打疫苗」；
+- 演示数据是唯一源（`prototypes/v0.2/demo-data.js`），页面不写死业务数字；全部标注合成示例；
+- 医学原文引用与来源分级见 [docs/EVIDENCE-LEDGER.md](docs/EVIDENCE-LEDGER.md)（指南正文经第三方镜像 PDF 核对 p.385-390，非官网直链，如实标注）；
+- 临床试验线裁剪：实测 ClinicalTrials.gov「primary immunodeficiency」601 条（短语检索，2026-11-12；`query.cond` 口径 733 条，2026-11-13）；裁剪理由与可推翻路径见 [docs/DEV-PLAN.md](docs/DEV-PLAN.md) §四。
+
+## 开发
 
 ```bash
-npm install
-npm run check
-npm run pack:check
-npm pack
+npm run check   # 静态检查链（17 项）
+npm test        # 单测
+node scripts/probe-disease-primer.mjs --url "http://127.0.0.1:<port>/prototypes/v0.2/index.html"
+node scripts/probe-page-view.mjs --url "http://127.0.0.1:<port>/prototypes/v0.2/index.html"
+node scripts/probe-primary-immunodeficiency-m2.mjs   # 自带静态服务，18 条叶子路由全量走查
 ```
 
-`npm run check` 只保证"能装"（语法 + 装包合同），第一天就该是绿的。`npm run audit` 管"还是不是家族里的一员"：版本三处一致、`lib/layout.js` 面板参数单一来源、检查链完整、文档与密钥卫生，**只看代码与文件，不看文档自述**。新项目刚生成时 audit 必然有 fail，那是待办清单；交付/发布前必须清零，存在 fail 不得发布（`npm run release:check` 一次跑完两者）。
-
-跑的时间点：**每次改完**跑 `check`；**G2 原型确认后、写业务代码前**先跑一次 `audit`（这时缺的多是 `lib/layout.js`、`VERSION` 这类结构，越早补越便宜）；**交付/装机前**必须跑 `release:check`；**发布或投稿前**把 `npm run audit --json` 的 `xx/xx 通过 · N 失败 · M 待人工` 抄进 `docs/RELEASE.md` 的「家族一致性」一行。`✗` 是结构缺口（补齐，或在 `docs/DEV-REQUIREMENTS-<日期>.md` 写明偏离理由并由用户确认），`!` 是需人工判断的项（逐条给「已人工确认 / 确实没有」）。
-
-`npm install` 可能按 npm 策略解析 peer；勿为消警告重复打包宿主 runtime。客户端本身是单文件；引入 TS/组件库后需添加构建步骤并保留单文件导出。
-
-本地安装入口以当前 Desktop/CLI 帮助为准。安装后按 [docs/06-VALIDATION-AND-RELEASE.md](docs/06-VALIDATION-AND-RELEASE.md) 与官方自测完成真实 UI 验收，并填写 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)。静态检查不代表已加载。
-
-Logo 来源与使用限制见 assets/README.md。许可证、作者、仓库/发布策略由本项目维护者确认后填写；模板默认为 private/UNLICENSED。
-
-感谢小x宝社区、DataElement 社区，以及 sam / hhx / 繁华的 ❤️ 贡献。
-
-初始化来源记录见 `.dsh-wb-starter.json`。更新社区脚手架不会覆盖本项目；需要升级时先用相同确认配置在临时目录生成，再审阅差异。CLI 用法见 [docs/CLI-GIT.md](docs/CLI-GIT.md)。
-
-## HTML先行与数据演进
-
-业务开发前先交付HTML交互工作台原型、实际预览并由用户确认版本/hash和范围。数据设计先区分领域事实、流程状态和页面读模型，走查前端/流程变化、兼容与迁移；原型对象不直接作为表。见[规范](docs/14-HTML-AND-DATA-CONTRACT.md)。
+- 版本：`VERSION` / package.json / 页脚 / ver-chip 四处同源（0.2.0-prototype 阶段随 M5 升版）；
+- 移植声明：原型结构移植自 cidp-workbench v0.2.0（家族模板移植 + 病种语义重写），语义残留断言进 check 链；
+- 截图由 `scripts/shoot-v0.2.0.mjs` 实渲生成，文件名含版本号；装机后以真机截图替换（Q30）。
