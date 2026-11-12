@@ -9,7 +9,7 @@
  * 用法：node scripts/check-ui-parity.mjs
  * 退出码：0 一致 / 1 不一致
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FILES, expected, OUT } from './migrate-public.mjs';

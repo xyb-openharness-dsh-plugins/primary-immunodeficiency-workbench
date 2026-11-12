@@ -40,7 +40,7 @@ const banner = `/* 由 scripts/build-client.mjs 从 src/client.js 生成，勿�
  *   装进 Desktop 会以别人的 id 注册。LESSONS L89。） */
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 const out = `${banner}window.__ModuleLoader__.load({
-  id: ${pkg.name},
+  id: "${pkg.name}",
   factory(require) {
     const React = require('react')
     /* 注入点：与 lib/layout.js 同源，客户端不许另写一份 0.65 */

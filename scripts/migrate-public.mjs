@@ -1,6 +1,6 @@
 #!/usr/bin/node
 /**
- * public/ 定点移植（小愈宝 HealPal 版）：**复制原型 → 定点替换**，不手抄。
+ * public/ 定点移植（小御宝 ImmuPal 版，结构与家族同一契约）：**复制原型 → 定点替换**，不手抄。
  *
  * 替换点（只有这些，其它与原型逐字符相同——ui-parity 口径）：
  *   1. index.html：加 noindex；「交互原型」条改开发版措辞；ver-chip 与页脚版本/构建日期
@@ -20,18 +20,18 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SRC = join(ROOT, 'prototypes/v0.2');
 const OUT = join(ROOT, 'public');
 const CHECK = process.argv.includes('--check');
-const FILES = ['index.html', 'app.js', 'style.css', 'demo-data.js', 'primer-data.js', 'primer.js', 'primer.css', 'trial-match.js'];
+const FILES = ['index.html', 'app.js', 'style.css', 'demo-data.js', 'primer-data.js', 'primer.js', 'primer.css'];
 
-const TITLE_OLD = '<title>小愈宝 HealPal · 天疱疮工作台（交互原型 v0.2）</title>';
-const TITLE_NEW = '<title>小愈宝 HealPal · 天疱疮工作台</title>\n<meta name="robots" content="noindex,nofollow">';
+const TITLE_OLD = '<title>小御宝 ImmuPal · 原发性免疫缺陷病工作台（交互原型 v0.2）</title>';
+const TITLE_NEW = '<title>小御宝 ImmuPal · 原发性免疫缺陷病工作台</title>\n<meta name="robots" content="noindex,nofollow">';
 const BAR_OLD = '    <span>交互原型 v0.2 · 全部为模拟资料 · 合成示例</span>\n    <span>仅本页演示 · 未接入 DSH/AI</span>';
 const BAR_NEW = '    <span>开发版 · 本机数据 · 不上传 · AI 面板由宿主提供 · 业务数据仍为演示内容直到导入真实资料</span>\n    <span>版本 <b>__VERSION_DISPLAY__</b></span>';
 const CHIP_OLD = '<span class="ver-chip" id="ver-chip">v0.2.0</span>';
 const CHIP_NEW = '<span class="ver-chip" id="ver-chip">__VERSION_DISPLAY__</span>';
-const FOOT_OLD = '<b id="app-version">v0.2.0</b><em id="app-build">2026-11-10</em>';
+const FOOT_OLD = '<b id="app-version">v0.2.0</b><em id="app-build">2026-11-12</em>';
 const FOOT_NEW = '<b id="app-version">__VERSION_DISPLAY__</b><em id="app-build">__BUILD_DATE__</em>';
-const APPINFO_OLD = "var APP_INFO = { version: 'v0.2.0', build: '2026-11-10' }";
-const APPINFO_NEW = "var APP_INFO = { version: '__VERSION_DISPLAY__', build: '__BUILD_DATE__' }";
+const APPINFO_OLD = 'var APP_INFO = { version: "v0.2.0", build: "2026-11-13" }';
+const APPINFO_NEW = 'var APP_INFO = { version: "__VERSION_DISPLAY__", build: "__BUILD_DATE__" }';
 
 const BOOT_BLOCK = `
 
@@ -55,18 +55,18 @@ const BOOT_BLOCK = `
     if (!b || !Array.isArray(b.profiles) || !b.profiles.length || b.TODAY == null) throw new Error('bootstrap 形状不符')
     window.DEMO_DATA.TODAY = b.TODAY
     window.DEMO_DATA.profiles = b.profiles
-    var app = window.__PERI_APP__
+    var app = window.__PID_APP__
     if (app && app.render) {
       app.state.profileId = b.profiles[0].id
       app.state.page = 'dash'
       app.state.sub = {}
       app.state.range = 'all'
-      app.state.picked = { CRP: true, ESR: true, WBC: false, cTnI: false, 'NT-proBNP': false, ALT: false, Cr: false, '体温': false }
+      app.state.picked = { IGG: true, IGA: false, IGM: false, CD4: false, CD19: false, WBC: false }
       app.state.showEpisodes = true
       app.state.flipped = {}
       app.render()
     }
-    window.__PERI_API_BASE__ = apiBase
+    window.__PID_API_BASE__ = apiBase
     console.info('[workbench] 已切换到本机数据库数据（' + b.profiles.length + ' 个档案）')
   }).catch(function (e) {
     console.warn('[workbench] bootstrap 不可用，继续使用演示数据：', String(e && e.message || e))

@@ -1,38 +1,101 @@
+/**
+ * 包的入口：DSH 插件的服务端侧（家族 cidp 接线形状，字符串换 PID）。
+ *
+ * 宿主（Harness）加载的就是这个文件，需要 `name` / `inject` / `Config` / `apply` 四样：
+ * - `name` / `inject` / `apply` 的实质逻辑在 `dsh/workbench.js` 与 `dsh/server.js`（零宿主依赖、可单测）；
+ * - `Config` 必须在**本文件**末尾——官方要求它是 Schemastery schema，而 Schemastery 是宿主提供的
+ *   peer 依赖，本仓库里装不上。为了不让 `apply()` 跟着不可测，只把这一行留在入口。
+ *
+ * 独立启动：`npm start -- --root <资料目录>`（scripts/dev-server.mjs，同一份 handler）。
+ */
 import Schema from '@deepseek-ai/schemastery'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Workbench } from './workbench.js'
+import { createHandler } from './server.js'
+import { PLUGIN_ID, API_PREFIX } from '../lib/identity.js'
+import { version, displayVersion, build as buildDate } from '../lib/version.js'
 
-export const name = 'primary-immunodeficiency-main'
+export { Workbench } from './workbench.js'
+export { createHandler, resolveStatic, checkDataDir, injectTokens } from './server.js'
+export { readBootstrap, readSubject, bootstrapForExit } from './readmodels.js'
+export { openStore, closeStore, migrate } from './store.js'
+export { seedDemoData } from './demo.js'
+export { resolveToken, parseLocalText, importFiles } from './mineru.js'
+export { PLUGIN_ID, API_PREFIX, HOME_DIR, DB_FILE, UI_ENTRY, DEV_PORT } from '../lib/identity.js'
+export { PANEL, AGENT_PANE, assertPanelConfig } from '../lib/layout.js'
+export { guardStartupApiBase, validateApiBase, buildApiUrl, detectForm } from '../lib/api-base.js'
+
+export const name = PLUGIN_ID
 export const inject = ['webServer', 'connection']
-const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
-const API_BASE = '/api/primary-immunodeficiency'
+const HERE = dirname(fileURLToPath(import.meta.url))
+export const PUBLIC_DIR = join(HERE, '..', 'public')
 
-/* 资料目录口径（与客户端 isForbiddenDir 同一条规则；服务端再判一遍）：
-   主目录本身 / 桌面 / 下载根目录 / tmp 一律不当资料目录。源码目录也不是资料目录。 */
-const HOME_EXACT = /^(\/Users\/[^/]+|\/home\/[^/]+|\/root|[A-Za-z]:\\Users\\[^\\]+)$/i
-const FORBIDDEN_DIR = /((Desktop|桌面)$|(Downloads?|下载(夹)?)$|^(\/tmp|\/private\/tmp|\/var\/folders\/|\/private\/var\/folders\/))/i
-const isForbiddenDir = (dir) => HOME_EXACT.test(dir) || FORBIDDEN_DIR.test(dir)
+/**
+ * 宿主挂载形态的 API_BASE。
+ * 宿主把插件挂在 `/api/<slug>` 下，因此页面拼 `${API_BASE}/api/bootstrap`
+ * = `/api/primary-immunodeficiency/api/bootstrap`（**交界处只有一个 /api 对**，不是重复）。
+ */
+export const API_BASE_HOSTED = `/api/${API_PREFIX}`
 
-/* 家族实测（2026-10-25）：写成 `ctx.config?.root` 时宿主直接报
-   config 未接线的错；root 必须从 apply(ctx, config) 第二参读。 */
-export function apply(ctx, config) {
+/** 建一个带认证检查的 handler（宿主与独立启动共用同一份）。 */
+export function createHostHandler(ctx, workbench, { dataRootOverride } = {}) {
+  const services = {
+    version, displayVersion, buildDate,
+    capabilities: ['bootstrap', 'health', 'data-root', 'subjects'],
+    bootstrap: () => workbench.bootstrap(),
+    /* 资料目录：面板点「配置目录」走这两个，服务端再判一遍口径 */
+    dataRoot: () => workbench.dataRoot,
+    setDataRoot: (dir) => {
+      const next = workbench.setDataRoot(dir)
+      if (dataRootOverride) dataRootOverride(dir)
+      return next
+    },
+    createSubject: (input) => workbench.createSubject(input),
+    deleteSubject: (key) => workbench.deleteSubject(key),
+  }
+  const inner = createHandler({ apiBase: API_BASE_HOSTED, publicDir: PUBLIC_DIR, services })
+  return (req, res) => {
+    /* 宿主形态：认证由 connection 能力提供；独立启动没有 ctx，直接走 inner */
+    if (ctx) {
+      const send = (status, body) => {
+        res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+        res.end(JSON.stringify(body))
+      }
+      if (typeof ctx.connection?.requestRejection !== 'function') return send(503, { error: 'connection authentication capability unavailable' })
+      const rejection = ctx.connection.requestRejection(req)
+      if (rejection !== undefined) return send(rejection, { error: 'Authentication required' })
+    }
+    return inner(req, res)
+  }
+}
+
+/**
+ * config 是**第二个参数**，不是 `ctx.config`。
+ *
+ * 家族实测（2026-10-25）：写成 `ctx.config?.root` 时宿主直接报
+ *   `cannot get property "config" without inject`
+ * —— Cordis 的服务访问守卫要求把 'config' 声明进 inject，而 config 本来就不走服务通道。
+ */
+export function apply(ctx, config = {}) {
   if (!ctx.webServer?.register) throw new Error('Desktop webServer.register is unavailable')
   const root = config?.root
   if (typeof root !== 'string' || root.trim() === '') {
-    // 宿主仍会注册，但业务接口直接报配置缺口，避免"装上了但数据没地方落"的假可用。
+    /* 不裸 throw 白屏：登记一个返回可读错误的健康接口，让前端能显示原因 */
     ctx.effect(() => ctx.webServer.register({
-      kind: 'exact', path: API_BASE + '/health',
+      kind: 'exact', path: `${API_BASE_HOSTED}/health`,
       handler(req, res) {
         res.writeHead(503, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
         res.end(JSON.stringify({ error: 'root 未配置', detail: 'cordis.patch.yml 需要 config.root: !!js dshHomePath(...)' }))
       },
-    }), 'primary-immunodeficiency health')
+    }), 'primary-immunodeficiency health (unconfigured)')
     return
   }
 
-  /* 资料根目录的覆盖值持久化在 root/data-root.json；GET 返回生效目录。 */
+  /* 资料根目录的覆盖值持久化在 root/data-root.json（schema 冻结、无 app_setting 表，
+     家族用 app_setting 的那一步在这里落成文件；GET/POST /root 走 Workbench.setDataRoot）。 */
   const overrideFile = () => join(root, 'data-root.json')
   const readOverride = () => {
     try {
@@ -41,108 +104,32 @@ export function apply(ctx, config) {
       return typeof parsed?.dataRoot === 'string' ? parsed.dataRoot : ''
     } catch { return '' }
   }
-  const currentRoot = () => readOverride() || root
 
-  const send = (res, status, body) => {
-    res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
-    res.end(JSON.stringify(body))
-  }
-  const authed = (req) => {
-    if (typeof ctx.connection?.requestRejection !== 'function') return null
-    const rejection = ctx.connection.requestRejection(req)
-    return rejection === undefined ? null : { status: rejection, body: { error: 'Authentication required' } }
-  }
-
-  /* 档案层：一个资料根一个库；Workbench 负责迁移与播种。
-     切换资料目录时先在新目录开库成功再替换，失败保留旧库（与 cidp 同一口径）。 */
   let workbench = null
-  const openWorkbench = (dir) => {
-    const next = new Workbench({ root: dir })
-    next.open()
-    return next
-  }
   try {
-    workbench = openWorkbench(currentRoot())
-    workbench.version = manifest.version
+    workbench = new Workbench({ root: readOverride() || root })
+    workbench.open()
   } catch (error) {
     ctx.log?.warn?.(`[primary-immunodeficiency] 档案库打开失败：${error?.message ?? error}`)
   }
-  ctx.effect(() => { try { workbench?.close() } catch { /* 幂等关库 */ } }, 'primary-immunodeficiency close store')
+  ctx.effect(() => { try { workbench?.close() } catch { /* 幂等关库 */ } }, 'primary-immunodeficiency store close')
 
-  ctx.effect(() => ctx.webServer.register({
-    kind: 'exact', path: API_BASE + '/health',
-    handler(req, res) {
-      const gate = authed(req)
-      if (gate) return send(res, gate.status, gate.body)
-      if (req.method !== 'GET') return send(res, 405, { error: 'Method not allowed' })
-      send(res, 200, { ok: true, version: manifest.version, apiVersion: 'v1', capabilities: ['health', 'data-root', 'subjects', 'bootstrap'] })
-    },
-  }), 'primary-immunodeficiency health')
+  const persistOverride = (dir) => {
+    try {
+      writeFileSync(overrideFile(), JSON.stringify({ dataRoot: dir, savedOn: new Date().toISOString().slice(0, 10) }, null, 2))
+    } catch (error) {
+      ctx.log?.warn?.(`[primary-immunodeficiency] 资料目录覆盖值写入失败：${error?.message ?? error}`)
+    }
+  }
 
-  ctx.effect(() => ctx.webServer.register({
-    kind: 'exact', path: API_BASE + '/subjects',
-    handler(req, res) {
-      const gate = authed(req)
-      if (gate) return send(res, gate.status, gate.body)
-      if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' })
-      const chunks = []
-      req.on('data', (chunk) => chunks.push(chunk))
-      req.on('end', () => {
-        let body = {}
-        try { body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') } catch { body = {} }
-        try {
-          const profile = workbench.createSubject(body)
-          send(res, 200, profile)
-        } catch (error) {
-          send(res, 400, { error: error?.message ?? String(error) })
-        }
-      })
-    },
-  }), 'primary-immunodeficiency subjects')
+  const handler = createHostHandler(ctx, workbench, { dataRootOverride: persistOverride })
+  ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: API_BASE_HOSTED, handler }), 'primary-immunodeficiency routes')
+  ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/' + API_PREFIX, handler }), 'primary-immunodeficiency ui')
+}
 
-  ctx.effect(() => ctx.webServer.register({
-    kind: 'exact', path: API_BASE + '/bootstrap',
-    handler(req, res) {
-      const gate = authed(req)
-      if (gate) return send(res, gate.status, gate.body)
-      if (req.method !== 'GET') return send(res, 405, { error: 'Method not allowed' })
-      try { send(res, 200, workbench.bootstrap()) } catch (error) { send(res, 500, { error: error?.message ?? String(error) }) }
-    },
-  }), 'primary-immunodeficiency bootstrap')
-
-  ctx.effect(() => ctx.webServer.register({
-    kind: 'exact', path: API_BASE + '/root',
-    handler(req, res) {
-      const gate = authed(req)
-      if (gate) return send(res, gate.status, gate.body)
-      if (req.method === 'GET') return send(res, 200, { dir: currentRoot(), configured: Boolean(config?.root) })
-      if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' })
-      const chunks = []
-      req.on('data', (chunk) => chunks.push(chunk))
-      req.on('end', () => {
-        try { body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') } catch { body = {} }
-        const dir = typeof body?.dir === 'string' ? body.dir.trim() : ''
-        if (!dir) return send(res, 400, { error: '缺少 dir' })
-        if (isForbiddenDir(dir)) {
-          return send(res, 400, { error: '这个位置不能当资料目录（主目录本身 / 桌面 / 下载根目录 / tmp）。请在里面新建一个专用文件夹再选。' })
-        }
-        try {
-          writeFileSync(overrideFile(), JSON.stringify({ dataRoot: dir, savedOn: new Date().toISOString().slice(0, 10) }, null, 2))
-          try {
-            const next = openWorkbench(dir)
-            try { workbench?.close() } catch { /* 幂等关库 */ }
-            workbench = next
-          } catch (error) {
-            send(res, 500, { error: `新目录开库失败：${error?.message ?? error}（目录覆盖值已保存）` })
-            return
-          }
-          send(res, 200, { dir })
-        } catch (error) {
-          send(res, 500, { error: `目录写入失败：${error?.message ?? error}` })
-        }
-      })
-    },
-  }), 'primary-immunodeficiency data-root')
+/** UI 入口文件是否存在（装机自检用） */
+export function uiReady() {
+  return existsSync(join(PUBLIC_DIR, 'index.html'))
 }
 
 export const Config = Schema.object({
