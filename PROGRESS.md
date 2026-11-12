@@ -23,3 +23,10 @@
 - M7/M8 草稿落盘 docs/release-draft/M7-M8-草稿.md（冻结待授权：tag v0.2.0 + release + BACKLOG 状态行 PR）。
 - 各闸口：G1/G2 自动签认（待追认）· V1=check 0✗+test 26/26+audit 44/44 · V2 装机自动签认（装机库 20 表实证）· V3 UI 走查待人工。
 - 停跑条件未触发；无未处理阻塞。
+
+## 2026-11-13 01:3x 补充：宿主形态无头走查（AUTOFIX 开工三步第 2 步）
+
+- scripts/probe-host-form.mjs（独立 dev-server :7821 + 无头 Chrome 点真实按钮）：**6/6 pass**——
+  HOST1 bootstrap 混合数据源（档案来自本机库、AI 演示坞退场）、HOST2 设置弹层三 tab（MinerU「不联网」如实）、
+  HOST3 ？四段 definition,evidence,landscape,trend、HOST4 A→B 切换（B 感染 8 条）、HOST5 390 无溢出、HOST6 无页面错误。
+- 至此 AUTOFIX「宿主形态复现」一步从 curl 层升级为真实交互层；V3 仍待人工（Desktop 完整形态含原生 AI 面板）。
