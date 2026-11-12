@@ -15,3 +15,11 @@
 - M6：pack 0.2.0 tgz → check-install 四要素 → pnpm 装 Desktop profile（兄弟仓无损）→ bundles 75 登记 → 完整重启 → verify-desktop-load exit 0 → 装机库直查 20 表/播种真落库（subjects 2 / infections 11 / labs 14）。V2 自动签认（docs/signoffs/V2-装机-自动签认.md）；V3 UI 走查待人工。
 - M7/M8 草稿已备（release notes + BACKLOG 状态行回填），冻结待晨审授权，不发布不推送 tag。
 - 下一步：AUTOFIX A–F 验收巡检 → M9 回流（check-trial-chain 裁剪分支等 4 项）→ MORNING-REVIEW。
+
+## 2026-11-13 01:4x 进度（AUTOFIX 巡检 + M9 回流完成）
+
+- AUTOFIX A–F 巡检（USER-ACCEPTANCE-AUTOFIX.md，M5 后生效）：audit 40/44→**44/44**（check 链补字面 --test、README 疾病概要四段 ### 化、DEV-REQUIREMENTS-2026-11-13.md、.gitignore .secrets）；DP/设置/功能线/指标卡/录入窗五类此前已在 35/35 探针覆盖，本轮全量复跑全过（探针 10+13+35）。
+- M9 回流（starter 240f03d，rc.50）：check-trial-chain「裁剪+实测证据」合法分支（自测 4 例）+ LESSONS L96–L98；本仓同步新检查器并改回家族规范 trials-* 命名，裁剪分支真实验证通过；starter 自检 236 文件 pass + test 67/67。
+- M7/M8 草稿落盘 docs/release-draft/M7-M8-草稿.md（冻结待授权：tag v0.2.0 + release + BACKLOG 状态行 PR）。
+- 各闸口：G1/G2 自动签认（待追认）· V1=check 0✗+test 26/26+audit 44/44 · V2 装机自动签认（装机库 20 表实证）· V3 UI 走查待人工。
+- 停跑条件未触发；无未处理阻塞。

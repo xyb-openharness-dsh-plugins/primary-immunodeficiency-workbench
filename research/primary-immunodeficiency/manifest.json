@@ -49,8 +49,8 @@
     }
   ],
   "snapshot": {
-    "jsonl": "snapshot-2026.jsonl",
-    "sqlite": "pid_clinical_snapshot_2026.sqlite",
+    "jsonl": "trials-2026.jsonl",
+    "sqlite": "pid_trials_2026.sqlite",
     "records": 60,
     "dbRows": 60,
     "sha256": "eaba716d712d92818467ca34df13602ebec6fd9c9d89125f86f7db6c43c548d9"

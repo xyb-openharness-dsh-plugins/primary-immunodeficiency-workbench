@@ -46,6 +46,10 @@
   逐例做四段匹配；用户主体处于 IVIG 维持期与感染监测期，试验线索不是第一优先信息线。
 - 可推翻路径：若晨审判定保留，M4 用 unified-trial-mcp 实测四通道建快照，M2/M5 按 35 号补四段链路；
   裁剪期间「设置 · 临床数据库」tab 如实写「未接入，裁剪决定见 DEV-PLAN §四（601 条实测 2026-11-12）」。
+- M4 实跑（L76，2026-11-13）：research/primary-immunodeficiency/ 四件套（manifest / trials-2026.jsonl /
+  pid_trials_2026.sqlite / FAILED.md），样本 60 条；unified-trial-mcp 四通道夜间窗口 FAILED 未查（如实）。
+  「裁剪+实测证据」合法分支已回流 starter rc.50（check-trial-chain 自测 4 例），
+  临时 snapshot-* 命名已改回家族规范 trials-* 命名；cond 口径复核 733 条（2026-11-13）。
 
 ## 五、夜间窗口纪律
 

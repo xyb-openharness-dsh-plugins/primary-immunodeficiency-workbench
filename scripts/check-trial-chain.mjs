@@ -40,12 +40,37 @@ function findTrialData(dir, depth = 0) {
 }
 
 export function check(input) {
-  const { ui, backend, docs, trialFiles } = input
+  const { ui, backend, docs, trialFiles, manifest } = input
   const fails = []
   const oks = []
   const hasData = trialFiles.length > 0
   const hasBackend = /trialMatch\s*\(|trials?\/search|\/trials?\b/.test(backend)
   const trimOnly = /裁剪说明|裁剪临床试验|不假装有功能/.test(ui)
+
+  /* ---------- 裁剪 + 实测证据（合法分支，2026-11-13 回流） ----------
+   * 冲突史：LESSONS L76（cold-agglutinin）要求「裁剪线也实跑 M4」，但本检查的 hasData 分支
+   * 见到 research/ 下 trials*.{jsonl,sqlite} 就要求前端四段——裁剪+实跑组合没有合法状态，
+   * PID 仓被迫把数据文件命名为不含 trial 字样的 snapshot-*（绕命名，不好）。
+   * 正解：research 目录下 manifest.json 里 trimmed:true + 快照实测条数>0 + 前端无检索入口 +
+   * 文案含实测 N 条 → 合法通过（数据只是裁剪决定的证据，不是可用检索快照）。
+   * 注意：trimmed 分支不许有四段要求，也不许有 trialMatch 后端（那就是没裁）。 */
+  const trimmedManifest = (() => {
+    try { const m = JSON.parse(manifest || ''); return m && m.trimmed === true ? m : null } catch { return null }
+  })()
+  if (trimmedManifest && (hasData || hasBackend)) {
+    const rec = Number(trimmedManifest.snapshot?.records ?? 0)
+    const noSearchUi = !/#trial-kw|trial-search|trialMatch\s*\(/.test(ui)
+    const noBackend = !hasBackend
+    const measuredDocs = /\d+\s*条/.test(docs) && /(实测|快照|snapshot)/.test(docs)
+    if (!noSearchUi || !noBackend) fails.push('manifest 标记 trimmed:true 但前端仍有检索入口或 trialMatch 后端——那就不是裁剪，回到四段链路判')
+    else oks.push('裁剪+实测证据：前端无检索入口、无匹配后端')
+    if (rec <= 0) fails.push('trimmed:true 但 manifest.snapshot.records<=0——裁剪证据必须是真的实测样本')
+    else oks.push(`裁剪证据实测样本 ${rec} 条（manifest）`)
+    if (!measuredDocs) fails.push('裁剪文案缺实测 N 条/快照口径——L76：未查过不能写零结果，查过了就要写数字')
+    else oks.push('裁剪文案带实测数字与快照口径')
+    if (fails.length === 0) oks.push('裁剪+实跑 M4 组合合法（L76）：数据为证据、无假入口、文案如实')
+    return { pass: fails.length === 0, fails, oks }
+  }
 
   if (hasData || hasBackend) {
     const segs = [
@@ -82,12 +107,29 @@ const GOOD = {
   docs: '实测 30 条（其中多数为登记研究，干预试验 N 条），快照 2026-11-12',
   trialFiles: ['cidp_trials_2026.sqlite'],
 }
+/* 裁剪+实测证据（2026-11-13 回流）：有数据文件、无检索入口、文案带实测数字 */
+const GOOD_TRIM = {
+  ui: "设置 · 临床数据库 tab：未接入（本台临床试验线已裁剪）。实测：601 条（快照 2026-11-12）。本台无试验快照检索入口；如需找具体试验请直接问医生",
+  backend: 'register health / root / subjects / bootstrap（无 trialMatch）',
+  docs: '实测：ClinicalTrials.gov phrase 检索 601 条（快照 2026-11-12）+ cond 口径 733 条（快照 2026-11-13）',
+  trialFiles: ['snapshot-2026.jsonl', 'pid_clinical_snapshot_2026.sqlite'],
+  manifest: JSON.stringify({ trimmed: true, snapshot: { records: 60 } }),
+}
+const BAD_TRIM = {
+  ui: "设置 tab：裁剪说明…… #trial-kw 检索框仍在",
+  backend: 'trialMatch(keyword) { ... }',
+  docs: '裁剪了',
+  trialFiles: ['snapshot-2026.jsonl'],
+  manifest: JSON.stringify({ trimmed: true, snapshot: { records: 0 } }),
+}
 
 if (SELF_TEST) {
   const bad = check(BAD)
   const good = check(GOOD)
-  const ok = bad.pass === false && good.pass === true
-  console.log(JSON.stringify({ selfTest: ok ? 'PASS' : 'FAIL', bad, goodPass: good.pass }, null, 2))
+  const goodTrim = check(GOOD_TRIM)
+  const badTrim = check(BAD_TRIM)
+  const ok = bad.pass === false && good.pass === true && goodTrim.pass === true && badTrim.pass === false
+  console.log(JSON.stringify({ selfTest: ok ? 'PASS' : 'FAIL', bad: bad.fails.length, goodPass: good.pass, goodTrimPass: goodTrim.pass, goodTrimOks: goodTrim.oks, badTrim: badTrim.fails }, null, 2))
   process.exit(ok ? 0 : 1)
 }
 
@@ -96,12 +138,39 @@ if (!existsSync(join(root, 'lib/client.js')) && !existsSync(join(root, 'public/a
   process.exit(2)
 }
 
-const ui = `${read('lib/client.js')}\n${read('public/app.js')}\n${read('lib/client-trials.js')}`
+/* UI 代码不一定都在 app.js：breast 把页面拆在 public/js/*.js 里。
+   扫 public/ 下两层所有 js（排除 vendor/node_modules），否则真实页面被判"没实现"。 */
+function readTree(dir, depth = 0) {
+  if (depth > 2) return ''
+  let out = ''
+  try {
+    for (const e of readdirSync(join(root, dir), { withFileTypes: true })) {
+      if (e.name.startsWith('.') || e.name === 'node_modules') continue
+      const rel = join(dir, e.name)
+      if (e.isDirectory()) { out += '\n' + readTree(rel, depth + 1); continue }
+      if (/\.(m?js)$/.test(e.name)) out += '\n' + read(rel)
+    }
+  } catch { /* 目录不存在就跳过 */ }
+  return out
+}
+const ui = `${read('lib/client.js')}\n${read('public/app.js')}\n${readTree('public')}\n${read('lib/client-trials.js')}`
 const backend = `${read('dsh/index.js')}\n${read('dsh/workbench.js')}`
 const docs = `${read('docs/CLINICAL-DATA.md')}\n${read('docs/DEV-REQUIREMENTS.md')}` +
   readdirSync(join(root, 'docs')).filter((n) => /^DEV-REQUIREMENTS/.test(n)).map((n) => read(join('docs', n))).join('\n')
 
-const result = check({ ui, backend, docs, trialFiles: findTrialData(join(root, 'research')) })
+/* manifest：research 目录任意层的 manifest.json（裁剪分支的 trimmed:true 证据来源） */
+const findManifest = (dir, depth = 2) => {
+  if (depth < 0 || !existsSync(dir)) return ''
+  for (const name of readdirSync(dir)) {
+    if (name === 'node_modules' || name.startsWith('.')) continue
+    const full = join(dir, name)
+    let st; try { st = statSync(full) } catch { continue }
+    if (st.isFile() && name === 'manifest.json') { try { return readFileSync(full, 'utf8') } catch { return '' } }
+    if (st.isDirectory()) { const found = findManifest(full, depth - 1); if (found) return found }
+  }
+  return ''
+}
+const result = check({ ui, backend, docs, trialFiles: findTrialData(join(root, 'research')), manifest: findManifest(join(root, 'research')) })
 for (const o of result.oks) console.log(`✓ ${o}`)
 for (const f of result.fails) console.error(`✗ ${f}`)
 console.log(result.pass ? '\n✓ 临床试验闸门通过' : '\n✗ 临床试验闸门未通过：要么四段齐，要么裁剪有实测依据')

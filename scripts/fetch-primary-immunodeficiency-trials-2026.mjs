@@ -10,8 +10,8 @@
  *
  * 产物（research/primary-immunodeficiency/）：
  *   manifest.json   计数 + 每通道终态 + hash
- *   snapshot-2026.jsonl   样本记录（逐字段映射，断言见 test/m4-snapshot.test.mjs）
- *   pid_clinical_snapshot_2026.sqlite   同一样本的 sqlite 形态
+ *   trials-2026.jsonl   样本记录（逐字段映射，断言见 test/m4-snapshot.test.mjs）
+ *   pid_trials_2026.sqlite   同一样本的 sqlite 形态
  *   FAILED.md   未查/失败通道如实记录
  *
  * 命名说明（2026-11-13 夜班，回流待办）：文件不用 trials-*.jsonl 命名，因为
@@ -88,11 +88,11 @@ try {
 mkdirSync(OUT, { recursive: true })
 
 /* jsonl */
-const jsonlPath = join(OUT, 'snapshot-2026.jsonl')
+const jsonlPath = join(OUT, 'trials-2026.jsonl')
 writeFileSync(jsonlPath, sample.map(r => JSON.stringify(r)).join('\n') + (sample.length ? '\n' : ''))
 
 /* sqlite（与 jsonl 同一份数据，逐字段映射断言在测试里对账） */
-const dbPath = join(OUT, 'pid_clinical_snapshot_2026.sqlite')
+const dbPath = join(OUT, 'pid_trials_2026.sqlite')
 const db = new DatabaseSync(dbPath)
 db.exec(`CREATE TABLE IF NOT EXISTS snapshot_trials (
   record_id TEXT PRIMARY KEY, registry TEXT, title TEXT, study_type TEXT, status_note TEXT,
@@ -107,7 +107,7 @@ db.close()
 
 /* manifest + hash */
 const jsonlHash = createHash('sha256').update(await (await import('node:fs/promises')).readFile(jsonlPath)).digest('hex')
-manifest.snapshot = { jsonl: 'snapshot-2026.jsonl', sqlite: 'pid_clinical_snapshot_2026.sqlite', records: sample.length, dbRows: dbCount, sha256: jsonlHash }
+manifest.snapshot = { jsonl: 'trials-2026.jsonl', sqlite: 'pid_trials_2026.sqlite', records: sample.length, dbRows: dbCount, sha256: jsonlHash }
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2))
 
 /* FAILED.md（未查/失败通道如实） */
