@@ -11,3 +11,5 @@ output/
 *.sqlite-wal
 *.sqlite-shm
 *.db
+.secrets
+*.secret
