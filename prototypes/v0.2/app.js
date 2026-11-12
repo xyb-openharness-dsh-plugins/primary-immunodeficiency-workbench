@@ -1,7 +1,7 @@
 /* 小御宝 ImmuPal · 原发性免疫缺陷病（PID）工作台原型 v0.2
  * 结构移植自 cidp-workbench（CIDP 仓，本文件仅此一处提及移植来源）v0.2.0（家族模板移植 + 病种语义重写）；
  * 对齐基准：小粉宝 v0.4（hero/指标卡3D/primer 接线）、小橙宝 v0.2（导航分组/泳道/AI 面板）。
- * 非肿瘤语义：感染—缓解表达；无病期/线序/疗效/预后；阈值一律【待核】。
+ * 非肿瘤语义：感染—缓解表达；不出现病期类、治疗线类、结局判定类表达；阈值一律【待核】。
  * 术语口径：免疫球蛋白「替代治疗」（replacement therapy），不写「置换」。
  * 数据唯一源：demo-data.js；页面不写死业务数字。全部为合成示例。
  * 试验线裁剪：见 docs/DEV-PLAN §四（实测 601 条 2026-11-12）；本原型无临床页、无检索入口。
@@ -792,7 +792,7 @@
     return '<section class="card"><h3>业务资料根目录</h3><p>当前：' + currentRootLabel() + '</p>' +
       '<button class="soft" data-action="open-store">更改位置…</button>' +
       '<p class="notice warn">口径：拒绝主目录、桌面、下载根目录、tmp 作为资料目录；源码目录不是资料目录。切换失败时服务端会给出具体理由（目录还在时，上次选择的目录重开宿主仍生效）。</p>' +
-      '<div class="grid three"><div class="card"><b>原件区</b><p class="small-note">0 个文件 · 示意</p></div><div class="card"><b>派生区</b><p class="small-note">0 个文件 · 示意</p></div><div class="card"><b>数据库</b><p class="small-note">已建库（21 表 · 演示数据）</p></div></div>' +
+      '<div class="grid three"><div class="card"><b>原件区</b><p class="small-note">0 个文件 · 示意</p></div><div class="card"><b>派生区</b><p class="small-note">0 个文件 · 示意</p></div><div class="card"><b>数据库</b><p class="small-note">已建库（表数以装机实渲为准 · 示意）</p></div></div>' +
       '<h3 style="margin-top:14px">备份与恢复</h3><p class="small-note">本原型未接入备份；开发版按 02 号契约提供。</p></section>'
   }
   function setMineru() {
