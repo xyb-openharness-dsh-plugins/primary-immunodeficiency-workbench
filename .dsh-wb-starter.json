@@ -1,0 +1,8 @@
+{
+  "starter": "dsh-wb-cli",
+  "version": "1.10.0-rc.46",
+  "revision": "9061c5c73b698d64e2bebd1011e235196a8766f1",
+  "dirty": false,
+  "generatedAt": "2026-11-12T15:19:21.730Z",
+  "updatePolicy": "Business project is a snapshot; compare changes before merging starter updates."
+}

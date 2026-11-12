@@ -1,0 +1,6 @@
+- insert:
+    - id: primary-immunodeficiency-main
+      name: "@xyb-community/primary-immunodeficiency-workbench"
+      # 接线前置：宿主把业务资料根目录指向 dshHomePath('primary-immunodeficiency')
+      config:
+        root: !!js dshHomePath('primary-immunodeficiency')
