@@ -1,0 +1,58 @@
+{
+  "generatedOn": "2026-11-13",
+  "purpose": "trim-evidence（试验线裁剪决定的实测证据，非可用检索快照）",
+  "trimmed": true,
+  "channels": [
+    {
+      "channel": "unified-trial-mcp:ictrp",
+      "state": "FAILED",
+      "reason": "夜间无人值守窗口无 MCP stdio 服务；未查过，不写零结果",
+      "url": null
+    },
+    {
+      "channel": "unified-trial-mcp:chinadrugtrials",
+      "state": "FAILED",
+      "reason": "同上",
+      "url": null
+    },
+    {
+      "channel": "unified-trial-mcp:chictr_online",
+      "state": "FAILED",
+      "reason": "同上",
+      "url": null
+    },
+    {
+      "channel": "unified-trial-mcp:gvba",
+      "state": "FAILED",
+      "reason": "同上",
+      "url": null
+    },
+    {
+      "channel": "ctg-v2:phrase",
+      "state": "OK",
+      "count": 601,
+      "url": "https://clinicaltrials.gov/api/v2/studies?query.term=%22primary+immunodeficiency%22&countTotal=true&pageSize=1",
+      "note": "短语检索口径（2026-11-12 首测 601，今日复核）"
+    },
+    {
+      "channel": "ctg-v2:cond",
+      "state": "OK",
+      "count": 733,
+      "url": "https://clinicaltrials.gov/api/v2/studies?query.cond=primary+immunodeficiency&countTotal=true&pageSize=1",
+      "note": "条件匹配口径"
+    },
+    {
+      "channel": "ctg-v2:sample",
+      "state": "OK",
+      "count": 60,
+      "note": "结构化样本（pageSize=60，字段映射断言见 test/m4-snapshot.test.mjs）"
+    }
+  ],
+  "snapshot": {
+    "jsonl": "snapshot-2026.jsonl",
+    "sqlite": "pid_clinical_snapshot_2026.sqlite",
+    "records": 60,
+    "dbRows": 60,
+    "sha256": "eaba716d712d92818467ca34df13602ebec6fd9c9d89125f86f7db6c43c548d9"
+  }
+}
