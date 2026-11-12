@@ -30,3 +30,9 @@
   HOST1 bootstrap 混合数据源（档案来自本机库、AI 演示坞退场）、HOST2 设置弹层三 tab（MinerU「不联网」如实）、
   HOST3 ？四段 definition,evidence,landscape,trend、HOST4 A→B 切换（B 感染 8 条）、HOST5 390 无溢出、HOST6 无页面错误。
 - 至此 AUTOFIX「宿主形态复现」一步从 curl 层升级为真实交互层；V3 仍待人工（Desktop 完整形态含原生 AI 面板）。
+
+## 2026-11-13 06:0x M7/M8 执行（获用户「继续执行」授权）
+
+- M7：tag v0.2.0 推送 + [release](https://github.com/xyb-openharness-dsh-plugins/primary-immunodeficiency-workbench/releases/tag/v0.2.0)（tgz + sha256 附件）。异常：首版 notes 混入杜撰功能词，发布后自查发现即更正并 API 校验（hasGarbled=false），发布物未受影响。
+- M8：[PR #75](https://github.com/xyb-openharness-dsh-plugins/.github/pull/75)（BACKLOG R3 #66 状态列 → 🔵 v0.2.0，只改状态列，分支 backlog/pid-v0.2.0，合并待审）。
+- 至此 M0–M9 全部执行完毕；剩余仅 V3 真机走查（两仓）待人工。

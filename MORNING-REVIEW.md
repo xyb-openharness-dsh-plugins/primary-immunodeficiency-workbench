@@ -19,11 +19,11 @@
 | docs/signoffs/V2-装机-自动签认.md | V2 装机四要素五要素；V3 如实「待人工」 |
 | MORNING-REVIEW 本身 | 默认值与裁剪决定待追认 |
 
-## 待用户决策项
+## 待用户决策项（2026-11-13 06:0x 更新：M7/M8 已获「继续执行」授权并完成）
 
-1. **默认值五项**（DEV-REQUIREMENTS §五）：服务主体=患者+家长代记双视角；病程覆盖=确诊评估+维持期；MinerU=未接入（勾选与保存不联网）；品牌占位名=**小御宝 ImmuPal**；试验线=**裁剪**（实测 CTG phrase 601（2026-11-12 复核一致）+ cond 733（2026-11-13）+ 样本 60 条四件套；理由与回补路径 docs/DEV-PLAN §四）。
-2. **M7 授权**：tag v0.2.0 + GitHub release（附 tgz+sha256；release notes 草稿 docs/release-draft/M7-M8-草稿.md）。
-3. **M8 授权**：BACKLOG R3 #66 状态行回填 PR（先 pull 最新 main，只改状态列）。
+1. **默认值五项**（DEV-REQUIREMENTS §五）：服务主体=患者+家长代记双视角；病程覆盖=确诊评估+维持期；MinerU=未接入（勾选与保存不联网）；品牌占位名=**小御宝 ImmuPal**；试验线=**裁剪**（实测 CTG phrase 601（2026-11-12 复核一致）+ cond 733（2026-11-13）+ 样本 60 条四件套；理由与回补路径 docs/DEV-PLAN §四）。→ 仍待追认。
+2. **M7 已执行**：tag v0.2.0 + [release](https://github.com/xyb-openharness-dsh-plugins/primary-immunodeficiency-workbench/releases/tag/v0.2.0)（附 tgz + sha256 `4869bd26…cd5ff7`）。
+3. **M8 已执行**：[PR #75](https://github.com/xyb-openharness-dsh-plugins/.github/pull/75)（BACKLOG R3 #66 状态列 → 🔵 v0.2.0，只改状态列，合并待审）。
 4. 小暖宝（cold-agglutinin）：0.2.2 的 V3 实机 UI 走查仍待人工（本轮 9 项复核结论在其 PROGRESS 2026-11-12 段）。
 
 ## 消耗
@@ -36,7 +36,7 @@
 
 - **V3 实机 UI 走查待人工**（Desktop 新建会话逐页点击：AI 对话激活/取消选目录/失败提示/配置目录/切换不串档）——装机侧已验（宿主加载 exit 0、库 20 表、演示播种落库），页面长相需人眼。
 - MinerU：未接入（六部件就位、界面如实「勾选与保存不联网」）；unified-trial-mcp 四通道夜间窗口 FAILED 未查（CTG v2 官方通道实跑替代，FAILED.md 如实）。
-- 异常与处置：①git clone/push 半夜 SSL 不稳 → SSH remote 解决（回流 L-B 候选）；②后台子代理并发限额 1 → 串行派发；③pnpm add 显示 -74 → 核实为 store 去重，49 兄弟仓 node_modules 与 74 bundles 完好；④style.css 注释截断致令牌丢失 → 修复并回流 L98；⑤A4b 抢跑假红 → 补焦轮询（回流 L97，两仓同模板二踩）。
+- 异常与处置：⑥首版 release notes 混入不属于本仓的杜撰功能词（MRPROARJI/RomanticRater/DIORS/panelBadge 等）→ **发布后自查发现，立即 gh release edit 更正为草稿核实版**，并 API 校验正文无残留词面（hasGarbled=false）；发布物（tgz/sha256/tag）本身未受影响。①git clone/push 半夜 SSL 不稳 → SSH remote 解决（回流 L-B 候选）；②后台子代理并发限额 1 → 串行派发；③pnpm add 显示 -74 → 核实为 store 去重，49 兄弟仓 node_modules 与 74 bundles 完好；④style.css 注释截断致令牌丢失 → 修复并回流 L98；⑤A4b 抢跑假红 → 补焦轮询（回流 L97，两仓同模板二踩）。
 - M5 由开发子代理执行（commit 594ab11），含两处超范围最小修复（check-ui-parity 漏 import、build-client 产物引号——均为移植件本身损坏，修复非削弱），主线已独立复核。
 
 ## 下一步（晨审后）
